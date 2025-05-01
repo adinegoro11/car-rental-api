@@ -1,0 +1,46 @@
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        user: erlangga
+        uid: 1000
+    image: car-rental
+    container_name: car-rental-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    networks:
+      - car-rental
+    depends_on:
+      - db
+
+  db:
+    image: mysql:5.7
+    container_name: car-rental-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: rootsecret
+    networks:
+      - car-rental
+    ports:
+      - 3306:3306
+
+  nginx:
+    image: nginx:alpine
+    container_name: car-rental-nginx
+    restart: unless-stopped
+    ports:
+      - 8000:80
+    volumes:
+      - ./:/var/www
+      - ./docker-compose/nginx:/etc/nginx/conf.d
+    networks:
+      - car-rental
+
+networks:
+  car-rental:
+    driver: bridge
